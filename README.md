@@ -53,3 +53,4 @@ Attn Weight Shape: (H/32,W/32,H/32,W/32) | Attn Weight Shape: (H/32 x W/32 , H/3
 [Y, X, ...] | [Y x W/32 + X, ...]
 [..., Y,X] | [..., Y x W/32 + X]
 
+![image](https://user-images.githubusercontent.com/79006977/129774867-06ff003c-4838-4cdc-9023-b06589c80b76.png)
