@@ -1,4 +1,4 @@
-# Understanding-Transformer-Self-Attention-Maps
+# Understanding-DETR-Transformer-Self-Attention-Maps
 
 The code is adapted from Facebook's Detection Transformer (DETR), specifically the tutorial, [detr_hands_on] (https://colab.research.google.com/github/facebookresearch/detr/blob/colab/notebooks/detr_attention.ipynb "DETR Colab"). 
 
@@ -13,12 +13,12 @@ The DETR paper and others have demonstrated that the self attention weights/maps
 </p>
 
 
-DETR passes the input image through a backbone CNN to obtain the representation of it. The model used in the Facebook Colab tutorial adopted the Resnet50 as a backbone, which downsamples the H and W of the image by 32x. A pointwise Conv2D is then used to change the number of input channels i.e. 3, to the embedding dimension i.e. 256. The H and W are then flattened, and final transformer input has the shape of (H/32 x W/32, 256), which forms the Query(Q), Key(K), Value(V) matrices of the DETR encoder. 
+DETR passes the input image through a backbone CNN to obtain the representation of it. The model used in the Facebook Colab tutorial adopted the Resnet50 as a backbone, which downsamples the H and W of the image by 32x. A pointwise Conv2D is then used to change the number of input channels i.e. 3, to the embedding dimension i.e. 256. The H and W are then flattened, and final transformer input has the shape of (H/32 * W/32, 256), which forms the Query(Q), Key(K), Value(V) matrices of the DETR encoder. 
 
 Unlike the Vision Transformer, DETR does not use a linear layer to project the image tokens into individual Q, K, V feature spaces. Rather, Q, K, V matrices inputs to the transformer are identical, except that q and k are concatenated with a positional embedding. Interestingly, this allows for DETR to be partially 'image size/aspect ratio invariant', unlike the Vision Transformer, where its input images require a centre crop.
 
 ## Self Attention Weights
-It is useful to understand that Self Attention Weights are simply derived from a matrix multiplication between Q (H/32 x W/32, 256) and K transposed (256, H/32 x W/32). Each Q row vector and K.T column vector represents each pixel of the backbone output feature map. Each Q columns and K.T rows are the corresponding embeddings of each pixel. An intuitive understanding of the  pixels' embedding can be borrowed from NLP. 
+It is useful to understand that Self Attention Weights are simply derived from a matrix multiplication between Q (H/32 * W/32, 256) and K transposed (256, H/32 * W/32). Each Q row vector and K.T column vector represents each pixel of the backbone output feature map. Each Q columns and K.T rows are the corresponding embeddings of each pixel. An intuitive understanding of the  pixels' embedding can be borrowed from NLP. 
 
 In NLP, each element of the word embedding vector can be intuited to be 'categories' e.g. family, royalty, power etc (shown below). The more related the word is to a category, the higher the value of that vector element corresponding to that category. Hence, similarity between two words can simply be obtained by getting the dot product of the first word's embedding vector with the second word's transposed embedding vector.  Dot product multiplies the elements in the same position in the embedding vectors i.e same 'category' from the two words, and sums up all these similarity values across the two words. If both words are closely related, they would have embedding vectors with large values in the same positions, and the dot product of their embedding vectors will result in a high magnitude.
 
