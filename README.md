@@ -14,12 +14,17 @@ The DETR paper and others have demonstrated that the self attention weights/maps
 
 DETR passes the input image through a backbone CNN to obtain the representation of it. The model used in the Facebook Colab tutorial adopted the Resnet50 as a backbone, which downsamples the H and W of the image by 32x. A pointwise Conv2D is then used to change the number of input channels i.e. 3, to the embedding dimension i.e. 256. The H and W are then flattened, and final transformer input has the shape of (H/32 * W/32, 256), which forms the Query(Q), Key(K), Value(V) matrices of the DETR encoder. 
 
+### Interesting note
 Unlike the Vision Transformer, DETR does not use a linear layer to project the image tokens into individual Q, K, V feature spaces. Rather, Q, K, V matrices inputs to the transformer are identical, except that q and k are concatenated with a positional embedding. Interestingly, this allows for DETR to be partially 'image size/aspect ratio invariant', unlike the Vision Transformer, where its input images require a centre crop.
 
 ## Self Attention Weights
 It is useful to understand that Self Attention Weights are simply derived from a matrix multiplication between Q (H/32 * W/32, 256) and K transposed (256, H/32 * W/32). Each Q row vector and K.T column vector represents each pixel of the backbone output feature map. Each Q columns and K.T rows are the corresponding embeddings of each pixel. An intuitive understanding of the  pixels' embedding can be borrowed from NLP. 
 
-In NLP, each element of the word embedding vector can be intuited to be 'categories' e.g. family, royalty, power etc (shown below). The more related the word is to a category, the higher the value of that vector element corresponding to that category. Hence, similarity between two words can simply be obtained by getting the dot product of the first word's embedding vector with the second word's transposed embedding vector.  Dot product multiplies the elements in the same position in the embedding vectors (i.e same 'category') from the two words, and sums up all these similarity values across the two words. If both words are closely related, they would have embedding vectors with large values in the same positions, and the dot product of their embedding vectors will result in a high magnitude.
+In NLP, each element of the word embedding vector can be intuited to be 'categories' e.g. family, royalty, power etc (shown below). The more related the word is to a category, the higher the value of that vector element corresponding to that category. 
+
+Hence, similarity between two words can simply be obtained by getting the dot product of the first word's embedding vector with the second word's transposed embedding vector.
+* Dot product multiplies the elements in the same position in the embedding vectors (i.e same 'category') from the two words, and sums up all these similarity values across the two words. 
+* If both words are closely related, they would have embedding vectors with large values in the same positions, and the dot product of their embedding vectors will result in a high magnitude.
 
 <p align="center">
 <img width="337" height="228" src="https://user-images.githubusercontent.com/79006977/129739480-53d8f810-a617-4bd2-82c3-b9f63505541b.png">
@@ -33,7 +38,9 @@ For DETR, perhaps the emebedding dimension can be intuited as different 'charact
 
 (please bear with the poor handwriting)
 
-The Self Attention Weight is simply derived from the dot product of each Query vector (representing a pixel) with every other Key vector (also representing a pixel), and the resulting scalar value is representative of how closely related the 2 pixels are. The first row in the Self Attention Weights represents the 'queried similarity values' between the first pixel of the feature map, and every other pixel. It can be said that the first row represents how much attention the first pixel of the feature map pays to every other pixel. The columns of the map represents how much attention every pixel pays to the first pixel. 
+The Self Attention Weight is simply derived from the dot product of each Query vector (representing a pixel) with every other Key vector (also representing a pixel), and the resulting scalar value is representative of how closely related the 2 pixels are. The first row in the Self Attention Weights represents the 'queried similarity values' between the first pixel of the feature map, and every other pixel. 
+
+#### **It can be said that the first row represents how much attention the first pixel of the feature map pays to every other pixel. The columns of the map represents how much attention every other pixel pays to the first pixel.**
 
 ## Understanding the Facebook DETR Tutorial on Attn Map Visualisation
 
