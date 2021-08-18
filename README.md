@@ -1,9 +1,8 @@
 # Understanding-DETR-Transformer-Self-Attention-Maps
 
-The code is adapted from Facebook's Detection Transformer (DETR), specifically the tutorial, [detr_hands_on] (https://colab.research.google.com/github/facebookresearch/detr/blob/colab/notebooks/detr_attention.ipynb "DETR Colab"). 
+The code is adapted from Facebook's Detection Transformer (DETR), specifically the tutorial, [detr_hands_on](https://colab.research.google.com/github/facebookresearch/detr/blob/colab/notebooks/detr_attention.ipynb "DETR Colab"). 
 
 The DETR paper and others have demonstrated that the self attention weights/maps are capable of some form of instance segmentation. This is an attempt to illustrate how self attention works, and why it is able to achieve this. 
-
 
 
 ## Background on DETR Encoder
@@ -38,11 +37,11 @@ The Self Attention Weight is simply derived from the dot product of each Query v
 
 ## Understanding the Facebook DETR Tutorial on Attn Map Visualisation
 
-In the FB Tutorial, the Self Attn Weights with shape of (H/32 * W/32, H/32 * W/32), was reshaped into (H/32, W/32, H/32, W/32). For convenience, we shall assign:
+In the FB DETR Tutorial, the Self Attn Weights with shape of (H/32 * W/32, H/32 * W/32), was reshaped into (H/32, W/32, H/32, W/32). For convenience, we shall assign:
 * sattn_shape1 = Attn Weight with shape (H/32, W/32, H/32, W/32) 
 * sattn_shape2 = Attn Weight with shape (H/32 * W/32, H/32 * W/32) 
 
-To obtain a Self Attention Map, which some times does instance segmentation, the FB Tutorial simply sliced sattn_shape2 using [Y/32, X/32, ... ] or [ ... , Y/32, X/32], where (X,Y) is a chosen coordinate on the raw image. e.g. the Self Attention Map of the coordinate 0,0 can derived using sattn_shape1[Y/32, X/32, ...]  OR sattn_shape1[ ... , Y/32, X/32] 
+To obtain a Self Attention Map, which some times does instance segmentation, the Tutorial simply sliced sattn_shape2 using [Y/32, X/32, ... ] or [ ... , Y/32, X/32], where (X,Y) is a chosen coordinate on the raw image. e.g. the Self Attention Map of the coordinate 0,0 can derived using sattn_shape1[Y/32, X/32, ...]  OR sattn_shape1[ ... , Y/32, X/32] 
 
 When I first saw this, it seemed like black magic to me. The only explanation I could find was from the [DETR issues forum](https://github.com/facebookresearch/detr/issues/162), where a FB Engineer (@fmassa) commented: ...'In the end, it's a matter of deciding if you want the attention of all pixels at location x, or the contribution of location x to all the attention maps.' And I was thus inspired to dig deeper. 
 
@@ -58,12 +57,12 @@ Attn that every other pixel pays to (X,Y) | sattn_shape1[ ..., Y/32 , X/32] | sa
 <p align="center">
 <img width="1000" height="480" src="https://user-images.githubusercontent.com/79006977/129822169-5f0b3f53-cf0e-4e1b-bc6d-c3c7e09dcc29.png">
 </p>
-From @fmassa's comment, it can be interepreted that the first two dimension of sattn_shape1 (H/32, W/32, H/32, W/32 ) as an index to the respective attention map, specifically the attention Coord(X,Y) pays to every other pixel. We know from the previous section that the rows of the sattn_shape2 weights correspond to the attention a pixel pays to every other pixel. Hence to obtain the correct row number of Coord(X,Y), we can flatten the H/32 and W/32 dimension, giving us Y/32 * W/32 + X/32. 
+From @fmassa's comment, substituting the X and Y coord into the first two dimension of sattn_shape1 (H/32, W/32, H/32, W/32) can be interpreted as using the first two dimensions as an index to the respective attention map, specifically the attention Coord(X,Y) pays to every other pixel. We know from the previous section that the rows of the sattn_shape2 weights correspond to the attention a pixel pays to every other pixel. Hence to obtain the correct row number of Coord(X,Y), we can flatten the H/32 and W/32 dimension, giving us Y/32 * W/32 + X/32. 
 
-Conversely, the last 2 dimension of the sattn_shape1 is an index to the respective attention map, specifically the attention every other pixel pays to Coord(X,Y), and the row number derived earlier is the column number for sattn_shape2 to derive the respective attention map
+Conversely, by symmetry, the last 2 dimension of the sattn_shape1 can be interpreted as an index to the respective attention map, specifically the attention that every other pixel pays to Coord(X,Y). The row number derived earlier can now be used as the column number for sattn_shape2 to derive the respective attention map. And.. this works! Refer to the comparision below:
 
 <p align="center">
 <img width="1100" height="480" src="https://user-images.githubusercontent.com/79006977/129822097-93045ca7-7897-4d43-b4cd-38bb6011044e.png">
 </p>
 
-
+Cheers!
