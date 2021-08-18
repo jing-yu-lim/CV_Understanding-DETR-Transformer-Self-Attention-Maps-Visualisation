@@ -19,7 +19,7 @@ Unlike the Vision Transformer, DETR does not use a linear layer to project the i
 ## Self Attention Weights
 It is useful to understand that Self Attention Weights are simply derived from a matrix multiplication between Q (H/32 * W/32, 256) and K transposed (256, H/32 * W/32). Each Q row vector and K.T column vector represents each pixel of the backbone output feature map. Each Q columns and K.T rows are the corresponding embeddings of each pixel. An intuitive understanding of the  pixels' embedding can be borrowed from NLP. 
 
-In NLP, each element of the word embedding vector can be intuited to be 'categories' e.g. family, royalty, power etc (shown below). The more related the word is to a category, the higher the value of that vector element corresponding to that category. Hence, similarity between two words can simply be obtained by getting the dot product of the first word's embedding vector with the second word's transposed embedding vector.  Dot product multiplies the elements in the same position in the embedding vectors i.e same 'category' from the two words, and sums up all these similarity values across the two words. If both words are closely related, they would have embedding vectors with large values in the same positions, and the dot product of their embedding vectors will result in a high magnitude.
+In NLP, each element of the word embedding vector can be intuited to be 'categories' e.g. family, royalty, power etc (shown below). The more related the word is to a category, the higher the value of that vector element corresponding to that category. Hence, similarity between two words can simply be obtained by getting the dot product of the first word's embedding vector with the second word's transposed embedding vector.  Dot product multiplies the elements in the same position in the embedding vectors (i.e same 'category') from the two words, and sums up all these similarity values across the two words. If both words are closely related, they would have embedding vectors with large values in the same positions, and the dot product of their embedding vectors will result in a high magnitude.
 
 <p align="center">
 <img width="337" height="228" src="https://user-images.githubusercontent.com/79006977/129739480-53d8f810-a617-4bd2-82c3-b9f63505541b.png">
@@ -43,7 +43,7 @@ In the FB DETR Tutorial, the Self Attn Weights with shape of (H/32 * W/32, H/32 
 
 To obtain a Self Attention Map, which some times does instance segmentation, the Tutorial simply sliced sattn_shape2 using [Y/32, X/32, ... ] or [ ... , Y/32, X/32], where (X,Y) is a chosen coordinate on the raw image. e.g. the Self Attention Map of the coordinate 0,0 can derived using sattn_shape1[Y/32, X/32, ...]  OR sattn_shape1[ ... , Y/32, X/32] 
 
-When I first saw this, it seemed like black magic to me. The only explanation I could find was from the [DETR issues forum](https://github.com/facebookresearch/detr/issues/162), where a FB Engineer (@fmassa) commented: ...'In the end, it's a matter of deciding if you want the attention of all pixels at location x, or the contribution of location x to all the attention maps.' And I was thus inspired to dig deeper. 
+When I first saw this, it seemed like magic to me. The only explanation I could find was from the [DETR issues forum](https://github.com/facebookresearch/detr/issues/162), where a FB Engineer (@fmassa) commented: ...'In the end, it's a matter of deciding if you want the attention of all pixels at location x, or the contribution of location x to all the attention maps.' And I was thus inspired to dig deeper. 
 
 We can understand why this works by understanding how to map between the two shapes of the Self Attention Weights (H/32, W/32, H/32, W/32) -> (H/32 * W/32 , H/32 * W/32) and building on the understanding of Self Attention Weights from the above section. 
 
@@ -59,7 +59,9 @@ Attn that every other pixel pays to (X,Y) | sattn_shape1[ ..., Y/32 , X/32] | sa
 </p>
 From @fmassa's comment, substituting the X and Y coord into the first two dimension of sattn_shape1 (H/32, W/32, H/32, W/32) can be interpreted as using the first two dimensions as an index to the respective attention map, specifically the attention Coord(X,Y) pays to every other pixel. We know from the previous section that the rows of the sattn_shape2 weights correspond to the attention a pixel pays to every other pixel. Hence to obtain the correct row number of Coord(X,Y), we can flatten the H/32 and W/32 dimension, giving us Y/32 * W/32 + X/32. 
 
-Conversely, by symmetry, the last 2 dimension of the sattn_shape1 can be interpreted as an index to the respective attention map, specifically the attention that every other pixel pays to Coord(X,Y). The row number derived earlier can now be used as the column number for sattn_shape2 to derive the respective attention map. And.. this works! Refer to the comparision below:
+Conversely, by symmetry, the last 2 dimension of the sattn_shape1 can be interpreted as an index to the respective attention map, specifically the attention that every other pixel pays to Coord(X,Y). The row number derived earlier can now be used as the column number for sattn_shape2 to derive the respective attention map. And.. this works! 
+
+Refer to the comparision below:
 
 <p align="center">
 <img width="1100" height="480" src="https://user-images.githubusercontent.com/79006977/129822097-93045ca7-7897-4d43-b4cd-38bb6011044e.png">
